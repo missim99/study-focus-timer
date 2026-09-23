@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Study Focus Timer</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f4f1ec;
+      font-family: Arial, sans-serif;
+      color: #333;
+      padding: 20px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      background: white;
+      border-radius: 24px;
+      padding: 30px 24px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 25px;
+    }
+
+    .subtitle {
+      color: #777;
+      margin-bottom: 18px;
+    }
+
+    .time-input {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    input {
+      width: 85px;
+      padding: 10px;
+      font-size: 20px;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+
+    .presets {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 25px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 17px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .preset {
+      background: #eeeae4;
+    }
+
+    .timer {
+      font-size: 64px;
+      font-weight: bold;
+      margin: 20px 0 5px;
+    }
+
+    #status {
+      color: #777;
+      min-height: 24px;
+      margin-bottom: 20px;
+    }
+
+    .main-button {
+      width: 100%;
+      background: #5e7c6b;
+      color: white;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .reset-button {
+      width: 100%;
+      background: #eeeae4;
+    }
+
+    .music-area {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f7f5f1;
+      border-radius: 14px;
+    }
+
+    .music-button {
+      background: #eeeae4;
+      margin-top: 10px;
+      min-width: 130px;
+    }
+
+    .music-button.on {
+      background: #dfe9e2;
+      color: #365545;
+      font-weight: bold;
+    }
+
+    .music-note {
+      font-size: 13px;
+      color: #888;
+      margin-top: 9px;
+    }
+
+    .completed {
+      border-top: 1px solid #eee;
+      margin-top: 25px;
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 17px;
+    }
+
+    #completedCount {
+      font-weight: bold;
+      font-size: 22px;
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+  <h1>Study Focus Timer</h1>
+
+  <div class="subtitle">
+    How long would you like to study?
+  </div>
+
+
+  <!-- CUSTOM TIME -->
+
+  <div class="time-input">
+
+    <input
+      id="minutesInput"
+      type="number"
+      min="1"
+      max="60"
+      value="10"
+    >
+
+    <span>minutes</span>
+
+  </div>
+
+
+  <!-- QUICK TIMES -->
+
+  <div class="presets">
+
+    <button class="preset" onclick="setTime(5)">
+      5
+    </button>
+
+    <button class="preset" onclick="setTime(10)">
+      10
+    </button>
+
+    <button class="preset" onclick="setTime(15)">
+      15
+    </button>
+
+    <button class="preset" onclick="setTime(25)">
+      25
+    </button>
+
+    <button class="preset" onclick="setTime(45)">
+      45
+    </button>
+
+  </div>
+
+
+  <!-- TIMER -->
+
+  <div
+    class="timer"
+    id="timer"
+  >
+    10:00
+  </div>
+
+
+  <div id="status">
+    Ready to focus
+  </div>
+
+
+  <!-- START / PAUSE -->
+
+  <button
+    class="main-button"
+    id="startButton"
+    onclick="startPause()"
+  >
+    START
+  </button>
+
+
+  <!-- RESET -->
+
+  <button
+    class="reset-button"
+    onclick="resetTimer()"
+  >
+    RESET
+  </button>
+
+
+  <!-- MUSIC -->
+
+  <div class="music-area">
+
+    <div>
+      🎵 Relaxing study music
+    </div>
+
+    <button
+      class="music-button"
+      id="musicButton"
+      onclick="toggleMusic()"
+    >
+      MUSIC OFF
+    </button>
+
+    <div class="music-note">
+      Music plays only while your timer is running
+    </div>
+
+  </div>
+
+
+  <!-- COMPLETED -->
+
+  <div class="completed">
+
+    <span>
+      Completed today
+    </span>
+
+    <span id="completedCount">
+      0
+    </span>
+
+  </div>
+
+</div>
+
+
+<!-- REAL STUDY MUSIC -->
+
+<audio
+  id="studyMusic"
+  src="ambient-calm.mp3"
+  preload="auto"
+  loop>
+</audio>
+
+
+<!-- REAL APPLAUSE -->
+
+<audio
+  id="applauseSound"
+  src="applause.mp3"
+  preload="auto">
+</audio>
+
+
+
+<script>
+
+/* =================================
+   TIMER SETTINGS
+================================= */
+
+let selectedMinutes = 10;
+
+let secondsLeft = 600;
+
+let timerInterval = null;
+
+let running = false;
+
+
+/* =================================
+   AUDIO SETTINGS
+================================= */
+
+let musicOn = false;
+
+
+const studyMusic =
+  document.getElementById(
+    "studyMusic"
+  );
+
+
+const applauseSound =
+  document.getElementById(
+    "applauseSound"
+  );
+
+
+/*
+Study music at 20% volume.
+*/
+
+studyMusic.volume = 0.20;
+
+
+/*
+Applause slightly louder.
+*/
+
+applauseSound.volume = 0.65;
+
+
+/* =================================
+   COMPLETED SESSION STORAGE
+================================= */
+
+let today =
+  new Date().toDateString();
+
+
+let savedDate =
+  localStorage.getItem(
+    "studyTimerDate"
+  );
+
+
+if (savedDate !== today) {
+
+  localStorage.setItem(
+    "studyTimerDate",
+    today
+  );
+
+  localStorage.setItem(
+    "studySessions",
+    "0"
+  );
+}
+
+
+let completedSessions =
+
+  Number(
+
+    localStorage.getItem(
+      "studySessions"
+    )
+
+  ) || 0;
+
+
+document
+  .getElementById(
+    "completedCount"
+  )
+  .textContent =
+  completedSessions;
+
+
+/* =================================
+   TIMER DISPLAY
+================================= */
+
+function updateDisplay() {
+
+  let minutes =
+    Math.floor(
+      secondsLeft / 60
+    );
+
+
+  let seconds =
+    secondsLeft % 60;
+
+
+  document
+    .getElementById(
+      "timer"
+    )
+    .textContent =
+
+    minutes +
+
+    ":" +
+
+    String(seconds)
+      .padStart(2, "0");
+}
+
+
+/* =================================
+   VALIDATE MINUTES
+================================= */
+
+function getValidMinutes() {
+
+  let input =
+    document.getElementById(
+      "minutesInput"
+    );
+
+
+  let value =
+    Number(input.value);
+
+
+  if (!Number.isFinite(value)) {
+
+    value = 10;
+
+  }
+
+
+  value =
+    Math.round(value);
+
+
+  if (value < 1) {
+
+    value = 1;
+
+  }
+
+
+  if (value > 60) {
+
+    value = 60;
+
+  }
+
+
+  input.value =
+    value;
+
+
+  return value;
+}
+
+
+/* =================================
+   QUICK TIME BUTTONS
+================================= */
+
+function setTime(minutes) {
+
+  if (running) {
+
+    return;
+
+  }
+
+
+  selectedMinutes =
+    minutes;
+
+
+  secondsLeft =
+    selectedMinutes * 60;
+
+
+  document
+    .getElementById(
+      "minutesInput"
+    )
+    .value =
+    selectedMinutes;
+
+
+  updateDisplay();
+
+
+  document
+    .getElementById(
+      "status"
+    )
+    .textContent =
+
+    selectedMinutes +
+
+    " minute session selected";
+}
+
+
+/* =================================
+   START / PAUSE / CONTINUE
+================================= */
+
+function startPause() {
+
+
+  /* PAUSE */
+
+  if (running) {
+
+    clearInterval(
+      timerInterval
+    );
+
+
+    timerInterval =
+      null;
+
+
+    running =
+      false;
+
+
+    /*
+    Pause music at its
+    current position.
+    */
+
+    pauseMusic();
+
+
+    document
+      .getElementById(
+        "startButton"
+      )
+      .textContent =
+      "CONTINUE";
+
+
+    document
+      .getElementById(
+        "status"
+      )
+      .textContent =
+      "Paused";
+
+
+    return;
+  }
+
+
+
+  /* START */
+
+
+  if (secondsLeft <= 0) {
+
+    selectedMinutes =
+      getValidMinutes();
+
+
+    secondsLeft =
+      selectedMinutes * 60;
+
+
+    updateDisplay();
+  }
+
+
+  running =
+    true;
+
+
+  document
+    .getElementById(
+      "startButton"
+    )
+    .textContent =
+    "PAUSE";
+
+
+  document
+    .getElementById(
+      "status"
+    )
+    .textContent =
+    "Focus time";
+
+
+  /*
+  Music plays only if
+  MUSIC ON is selected.
+  */
+
+  if (musicOn) {
+
+    playMusic();
+
+  }
+
+
+  timerInterval =
+    setInterval(
+      function() {
+
+
+        secondsLeft--;
+
+
+        if (
+          secondsLeft <= 0
+        ) {
+
+          secondsLeft = 0;
+
+          updateDisplay();
+
+          finishSession();
+
+          return;
+        }
+
+
+        updateDisplay();
+
+
+      },
+
+      1000
+    );
+}
+
+
+/* =================================
+   RESET
+================================= */
+
+function resetTimer() {
+
+  clearInterval(
+    timerInterval
+  );
+
+
+  timerInterval =
+    null;
+
+
+  running =
+    false;
+
+
+  /*
+  Reset music to beginning.
+  */
+
+  stopMusic();
+
+
+  selectedMinutes =
+    getValidMinutes();
+
+
+  secondsLeft =
+    selectedMinutes * 60;
+
+
+  updateDisplay();
+
+
+  document
+    .getElementById(
+      "startButton"
+    )
+    .textContent =
+    "START";
+
+
+  document
+    .getElementById(
+      "status"
+    )
+    .textContent =
+    "Ready to focus";
+}
+
+
+/* =================================
+   SESSION FINISHED
+================================= */
+
+function finishSession() {
+
+  clearInterval(
+    timerInterval
+  );
+
+
+  timerInterval =
+    null;
+
+
+  running =
+    false;
+
+
+  /*
+  Stop music first.
+  */
+
+  stopMusic();
+
+
+  /*
+  Increase today's
+  completed sessions.
+  */
+
+  completedSessions++;
+
+
+  localStorage.setItem(
+
+    "studySessions",
+
+    completedSessions
+
+  );
+
+
+  document
+    .getElementById(
+      "completedCount"
+    )
+    .textContent =
+    completedSessions;
+
+
+  document
+    .getElementById(
+      "status"
+    )
+    .textContent =
+
+    "Great work — session complete! 👏";
+
+
+  document
+    .getElementById(
+      "startButton"
+    )
+    .textContent =
+    "START AGAIN";
+
+
+  /*
+  Play our REAL
+  applause recording.
+  */
+
+  playApplause();
+}
+
+
+/* =================================
+   MUSIC BUTTON
+================================= */
+
+function toggleMusic() {
+
+  musicOn =
+    !musicOn;
+
+
+  let button =
+    document.getElementById(
+      "musicButton"
+    );
+
+
+  if (musicOn) {
+
+    button.textContent =
+      "MUSIC ON";
+
+
+    button.classList.add(
+      "on"
+    );
+
+
+    /*
+    If timer is already
+    running, start music.
+    */
+
+    if (running) {
+
+      playMusic();
+
+    }
+
+
+  } else {
+
+    button.textContent =
+      "MUSIC OFF";
+
+
+    button.classList.remove(
+      "on"
+    );
+
+
+    stopMusic();
+
+  }
+}
+
+
+/* =================================
+   PLAY STUDY MUSIC
+================================= */
+
+function playMusic() {
+
+  studyMusic
+    .play()
+    .catch(
+      function(error) {
+
+        console.log(
+          "Music could not play:",
+          error
+        );
+
+      }
+    );
+}
+
+
+/* =================================
+   PAUSE STUDY MUSIC
+================================= */
+
+function pauseMusic() {
+
+  studyMusic.pause();
+
+}
+
+
+/* =================================
+   STOP STUDY MUSIC
+================================= */
+
+function stopMusic() {
+
+  studyMusic.pause();
+
+
+  try {
+
+    studyMusic.currentTime =
+      0;
+
+  } catch (error) {}
+
+}
+
+
+/* =================================
+   REAL APPLAUSE
+================================= */
+
+function playApplause() {
+
+  /*
+  Always start applause
+  from the beginning.
+  */
+
+  applauseSound.pause();
+
+
+  try {
+
+    applauseSound.currentTime =
+      0;
+
+  } catch (error) {}
+
+
+  applauseSound
+    .play()
+    .catch(
+      function(error) {
+
+        console.log(
+          "Applause could not play:",
+          error
+        );
+
+      }
+    );
+}
+
+
+/* =================================
+   MANUAL TIME INPUT
+================================= */
+
+document
+  .getElementById(
+    "minutesInput"
+  )
+  .addEventListener(
+    "change",
+    function() {
+
+
+      if (running) {
+
+        this.value =
+          selectedMinutes;
+
+        return;
+
+      }
+
+
+      selectedMinutes =
+        getValidMinutes();
+
+
+      secondsLeft =
+        selectedMinutes * 60;
+
+
+      updateDisplay();
+
+
+      document
+        .getElementById(
+          "status"
+        )
+        .textContent =
+
+        selectedMinutes +
+
+        " minute session selected";
+
+    }
+  );
+
+
+/* =================================
+   INITIAL DISPLAY
+================================= */
+
+updateDisplay();
+
+</script>
+
+</body>
+</html>
