@@ -1,14 +1,14 @@
-const CACHE_NAME = "study-focus-timer-v1";
-
+const CACHE_NAME = "study-focus-timer-v2";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon.png",
+  "./icon-192.png",
+  "./icon-512.png",
   "./ambient-calm.mp3",
   "./applause.mp3"
 ];
-
 
 /* INSTALL */
 
