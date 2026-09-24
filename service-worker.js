@@ -1,4 +1,4 @@
-const CACHE_NAME = "study-focus-timer-v2";
+const CACHE_NAME = "study-focus-timer-v3";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
